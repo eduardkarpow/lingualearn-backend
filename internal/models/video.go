@@ -26,6 +26,7 @@ type VideoResponse struct {
 	ID           uuid.UUID `json:"id"`
 	Title        string    `json:"title"`
 	Status       string    `json:"status"`
+	Duration     int       `json:"duration"`
 	ThumbnailURL string    `json:"thumbnail_url"`
 	StreamURL    string    `json:"stream_url"`
 }
