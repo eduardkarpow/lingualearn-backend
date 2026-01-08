@@ -108,6 +108,7 @@ func (h *Handlers) ListVideos(c *fiber.Ctx) error {
 			ID:           v.ID,
 			Title:        v.Title,
 			Status:       v.Status,
+			Duration:     *v.Duration,
 			ThumbnailURL: h.storage.GetObjectURL(*v.ThumbnailKey),
 			StreamURL:    h.storage.GetObjectURL(v.VideoKey),
 		})
