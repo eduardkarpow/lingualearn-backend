@@ -56,7 +56,8 @@ func main() {
 	api.Post("/video", handlers.UploadVideo)
 	api.Get("/test", handlers.TestFiber)
 	api.Get("/videos", handlers.ListVideos)
-	//api.Get("/videos/:id/stream", handlers.StreamVideo)
+	api.Get("/videos/:id/stream", handlers.StreamVideo)
+	api.Post("/sub", handlers.UploadSubtitles)
 	//api.Get("/videos/:id/thumbnail", handlers.GetThumbnail)
 
 	log.Fatal(app.Listen(":8000"))

@@ -75,3 +75,11 @@ func (vs *VideoService) GetVideoByID(ctx context.Context, id string) (*models.Vi
 	)
 	return video, err
 }
+
+func (vs *VideoService) CreateSub(ctx context.Context, videoId string, subKey string) error {
+	query := `
+		INSERT INTO subtitles (id, video_id, subtitle_key, shift) VALUES ($1, $2, $3, $4)
+	`
+	_, err := vs.db.ExecContext(ctx, query, uuid.New(), videoId, subKey, 0)
+	return err
+}

@@ -95,6 +95,40 @@ func (h *Handlers) UploadVideo(c *fiber.Ctx) error {
 	})
 }
 
+// POST /api/v1/subtitle - Upload subtitle file
+func (h *Handlers) UploadSubtitles(c *fiber.Ctx) error {
+	file, err := c.FormFile("subtitle")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "No sub file provided"})
+	}
+
+	ext := filepath.Ext(file.Filename)
+	filename := fmt.Sprintf("%s%s", uuid.New().String(), ext)
+
+	// Open and read file
+	f, err := file.Open()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to read file"})
+	}
+	defer f.Close()
+
+	fileBytes, err := io.ReadAll(f)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to read file"})
+	}
+	subKey, err := h.storage.SaveFile(c.Context(), filename, "text/plain", fileBytes)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to save video"})
+	}
+	videoId := c.FormValue("videoId")
+
+	if err := h.videoSvc.CreateSub(c.Context(), videoId, subKey); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to save metadata"})
+	}
+
+	return c.JSON(fiber.Map{"success": true})
+}
+
 // GET /api/v1/videos - List videos
 func (h *Handlers) ListVideos(c *fiber.Ctx) error {
 	videos, err := h.videoSvc.ListVideos(c.Context())
@@ -125,12 +159,9 @@ func (h *Handlers) StreamVideo(c *fiber.Ctx) error {
 	}
 
 	// Redirect to MinIO presigned URL (60min expiry)
-	url, err := h.storage.GetPresignedURL(c.Context(), video.VideoKey, 60*time.Minute)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to generate stream URL"})
-	}
+	url := h.storage.GetObjectURL(video.VideoKey)
 
-	return c.Redirect(url, 302)
+	return c.JSON(fiber.Map{"url": url})
 }
 
 // Background processing
