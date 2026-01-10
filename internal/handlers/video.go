@@ -129,6 +129,24 @@ func (h *Handlers) UploadSubtitles(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true})
 }
 
+func (h *Handlers) GetSubs(c *fiber.Ctx) error {
+	sub, err := h.videoSvc.GetSub(c.Context(), c.Params("videoId"))
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Can't find subs"})
+	}
+	subUrl := h.storage.GetObjectURL(sub.SubKey)
+	subReader, err := h.storage.GetReaderFromURL(subUrl)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Can't get subs"})
+	}
+	defer subReader.Close()
+	subs, err := h.videoSvc.ProcessSub(c.Context(), subReader, sub.Shift)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Can't proccess subs"})
+	}
+	return c.JSON(subs)
+}
+
 // GET /api/v1/videos - List videos
 func (h *Handlers) ListVideos(c *fiber.Ctx) error {
 	videos, err := h.videoSvc.ListVideos(c.Context())
