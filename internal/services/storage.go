@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -63,4 +64,17 @@ func (s *StorageService) SaveFileWithReader(ctx context.Context, filename, conte
 		return "", err
 	}
 	return key, nil
+}
+
+func (s *StorageService) GetReaderFromURL(url string) (io.ReadCloser, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, fmt.Errorf("failed to fetch subtitles: status %d", resp.StatusCode)
+	}
+
+	return resp.Body, nil
 }

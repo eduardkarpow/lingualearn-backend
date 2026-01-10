@@ -3,13 +3,25 @@ package services
 import (
 	"context"
 	"database/sql"
+	"io"
 	"linguaLearn/internal/models"
 
+	"github.com/asticode/go-astisub"
 	"github.com/google/uuid"
 )
 
 type VideoService struct {
 	db *sql.DB
+}
+
+type SubResponse struct {
+	SubKey string
+	Shift  int
+}
+
+type SubsElement struct {
+	Start int      `json:"start"`
+	Lines []string `json:"lines"`
 }
 
 func NewVideoService(db *sql.DB) *VideoService {
@@ -82,4 +94,33 @@ func (vs *VideoService) CreateSub(ctx context.Context, videoId string, subKey st
 	`
 	_, err := vs.db.ExecContext(ctx, query, uuid.New(), videoId, subKey, 0)
 	return err
+}
+
+func (vs *VideoService) GetSub(ctx context.Context, videoId string) (SubResponse, error) {
+	query := `
+		SELECT subtitle_key, shift FROM subtitles WHERE video_id=$1
+	`
+	var subResponse SubResponse
+	err := vs.db.QueryRowContext(ctx, query, videoId).Scan(&subResponse.SubKey, &subResponse.Shift)
+	return subResponse, err
+}
+
+func (vs *VideoService) ProcessSub(ctx context.Context, reader io.ReadCloser, shift int) ([]SubsElement, error) {
+	subs, err := astisub.ReadFromSRT(reader)
+	if err != nil {
+		return nil, err
+	}
+	var subsResponse []SubsElement
+	for _, item := range subs.Items {
+		start := int(item.StartAt.Seconds()) + shift
+		var lines []string
+		for _, line := range item.Lines {
+			lines = append(lines, line.String())
+		}
+		subsResponse = append(subsResponse, SubsElement{
+			Start: start,
+			Lines: lines,
+		})
+	}
+	return subsResponse, nil
 }

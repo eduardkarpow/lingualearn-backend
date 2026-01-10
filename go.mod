@@ -10,6 +10,12 @@ require (
 require github.com/joho/godotenv v1.5.1
 
 require (
+	github.com/asticode/go-astikit v0.20.0 // indirect
+	github.com/asticode/go-astisub v0.38.0 // indirect
+	github.com/asticode/go-astits v1.8.0 // indirect
+)
+
+require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
