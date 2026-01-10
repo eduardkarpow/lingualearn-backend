@@ -30,6 +30,11 @@ type AddInfoResponse struct {
 	pr       io.Reader
 }
 
+type SubsShiftRequest struct {
+	Shift   int    `json:"shift"`
+	VideoId string `json:"videoId"`
+}
+
 func NewHandlers(videoSvc *services.VideoService, storage *services.StorageService) *Handlers {
 	return &Handlers{videoSvc: videoSvc, storage: storage}
 }
@@ -145,6 +150,18 @@ func (h *Handlers) GetSubs(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Can't proccess subs"})
 	}
 	return c.JSON(subs)
+}
+
+func (h *Handlers) ShiftSubs(c *fiber.Ctx) error {
+	req := new(SubsShiftRequest)
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Cannot parse JSON"})
+	}
+	err := h.videoSvc.ShiftSubs(c.Context(), req.VideoId, req.Shift)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to shift subs"})
+	}
+	return c.JSON(fiber.Map{"success": true})
 }
 
 // GET /api/v1/videos - List videos
