@@ -105,6 +105,14 @@ func (vs *VideoService) GetSub(ctx context.Context, videoId string) (SubResponse
 	return subResponse, err
 }
 
+func (vs *VideoService) ShiftSubs(ctx context.Context, videoId string, shift int) error {
+	query := `
+		UPDATE subtitles SET shift=shift+$1 WHERE video_id=$2
+	`
+	_, err := vs.db.ExecContext(ctx, query, shift, videoId)
+	return err
+}
+
 func (vs *VideoService) ProcessSub(ctx context.Context, reader io.ReadCloser, shift int) ([]SubsElement, error) {
 	subs, err := astisub.ReadFromSRT(reader)
 	if err != nil {
